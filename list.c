@@ -34,7 +34,62 @@ Given a list of strings and a separator string, returns a single string
 containing all the strings in list joined by the separator.
 */
 UStr join(List* list, UStr separator) {
-    // TODO: implement this
+	if (list->size == 0) {
+		return new_ustr("");
+	}
+
+	int32_t total_bytes = 0;
+	for (int32_t i = 0; i < list->size; ++i) {
+		total_bytes += list->data[i].bytes;
+	}
+	total_bytes += separator.bytes * (list->size-1);
+	char *buffer = malloc(total_bytes+1);
+	char *p = buffer;
+	
+	memcpy(p, list->data[0].contents, list->data[0].bytes);
+	p += list->data[0].bytes;
+	
+	for (int32_t i = 1; i < list->size; ++i) {
+		memcpy(p, separator.contents, separator.bytes);
+		p += separator.bytes;
+
+		memcpy(p, list->data[i].contents, list->data[i].bytes);
+		p+= list->data[i].bytes;
+
+	}
+	*p = '\0';
+	UStr result = new_ustr(buffer);
+	free(buffer);
+	return result;
+}
+
+//helper method
+void list_expand_capacity(List* list){
+
+	uint32_t new_capacity = list->capacity * 2;
+
+	UStr* new_data = calloc(sizeof(UStr), new_capacity);
+
+	UStr* old_data = list->data;
+
+	
+
+	for (int i = 0; i < list->size; i++){
+
+	new_data[i] = old_data[i];
+
+	}
+
+	for(int i = 0; i< list->size; i++){
+		free_ustr(old_data[i]);
+	}
+
+	free(old_data);
+
+	list->data = new_data;
+
+	list->capacity = new_capacity;
+
 
 }
 
@@ -47,6 +102,26 @@ Returns 1 on success, 0 if the index is invalid (out of bounds).
 int8_t insert(List* list, UStr s, int32_t index) {
     // TODO: implement this
 
+
+	if (list->size >= list->capacity){
+		list_expand_capacity(list);
+	}
+
+	if (index < 0 || index > list->size){
+		return 0;
+	}
+
+	for (int i = list->size - 1; i >= index; i--){
+		list->data[i+1] = list->data[i];
+	}
+
+	UStr copy = new_ustr(s.contents);
+
+	list->data[index] = copy;
+
+	list->size++;
+
+	return 1;
 }
 
 /*
@@ -57,6 +132,16 @@ Returns 1 on success, 0 if the index is invalid (out of bounds).
 int8_t listRemoveAt(List* list, int32_t index) {
     // TODO: implement this
 
+	if (index < 0 || index >= list->size){
+		return 0;
+	}
+
+	for (int i = index; i < list->size; i++){
+		list->data[i] = list->data[i+1];
+	}
+
+	list->size--;
+	return 1;
 }
 
 /*
@@ -73,6 +158,40 @@ end of the result.
 Note that the delimiter could be of a length of more than 1 character
 */
 List split(UStr s, UStr separator) {
-    // TODO: implement this
+	List parts = new_list(4);
+	if (separator.bytes == 0) {
+		UStr whole = new_ustr(s.contents);
+		parts.data[0] = whole;
+		parts.size = 1;
+		return parts;
+	}
+	char* cur = s.contents;
+	char* match;
+	int32_t sep_len = separator.bytes;
 
+	while((match = strstr(cur, separator.contents)) != NULL) {
+		int32_t chunk_len = match - cur;
+		char* tmp = malloc(chunk_len + 1);
+		memcpy(tmp, cur, chunk_len);
+		tmp[chunk_len] = '\0';
+		UStr piece = new_ustr(tmp);
+		free(tmp);
+
+		if (parts.size == parts.capacity) {
+			int32_t new_cap = parts.capacity*2;
+			parts.data = realloc(parts.data, new_cap * sizeof(UStr));
+			parts.capacity = new_cap;
+		}
+		parts.data[parts.size++] = piece;
+		cur = match+sep_len;
+	}
+	UStr last = new_ustr(cur);
+	if (parts.size == parts.capacity) {
+		int32_t new_cap = parts.capacity * 2;
+		parts.data = realloc(parts.data, new_cap*sizeof(UStr));
+		parts.capacity = new_cap;
+	}
+	parts.data[parts.size++] = last;
+	return parts;
 }
+
