@@ -118,6 +118,46 @@ Example: reverse("apples🍎 and bananas🍌") = "🍌sananab dna 🍎selppa")
 */
 UStr reverse(UStr s) {
 	// TODO: implement this
+	char* buffer = calloc(s.bytes + 1, 1);
+        int buffer_i = 0;
+        int c_point = s.codepoints;
+        int i = s.bytes - 1;
+
+	if (s.codepoints == 0){
+		UStr empty = new_ustr("");
+		return empty;
+	}
+	
+	
+
+	while (c_point > 0 && i >= 0){
+		int len;
+		int start = i;
+
+		
+
+		while(start > 0 && (s.contents[start] & 0b11000000) == 0b10000000){
+			start--;
+			
+		}
+		
+		len = i - start + 1;
+		
+		
+		for (int j = 0; j < len; j++){
+                        buffer[buffer_i] = s.contents[start + j];
+                        buffer_i++;
+                }
+
+                i = start - 1;
+                c_point--;
+	}
+
+	buffer[buffer_i] = 0;
+        UStr output = new_ustr(buffer);
+
+	free(buffer);
+	return output;
 
 }
 
