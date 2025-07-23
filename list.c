@@ -38,6 +38,36 @@ UStr join(List* list, UStr separator) {
 
 }
 
+//helper method
+void list_expand_capacity(List* list){
+
+	uint32_t new_capacity = list->capacity * 2;
+
+	UStr* new_data = calloc(sizeof(UStr), new_capacity);
+
+	UStr* old_data = list->data;
+
+	
+
+	for (int i = 0; i < list->size; i++){
+
+	new_data[i] = old_data[i];
+
+	}
+
+	for(int i = 0; i< list->size; i++){
+		free_ustr(old_data[i]);
+	}
+
+	free(old_data);
+
+	list->data = new_data;
+
+	list->capacity = new_capacity;
+
+
+}
+
 /*
 Inserts string s into list at index s, shifting elements to the right.
 Expands the list's capacity if necessary (double the capacity, or set to 1 if 0).
@@ -47,6 +77,26 @@ Returns 1 on success, 0 if the index is invalid (out of bounds).
 int8_t insert(List* list, UStr s, int32_t index) {
     // TODO: implement this
 
+
+	if (list->size >= list->capacity){
+		list_expand_capacity(list);
+	}
+
+	if (index < 0 || index > list->size){
+		return 0;
+	}
+
+	for (int i = list->size - 1; i >= index; i--){
+		list->data[i+1] = list->data[i];
+	}
+
+	UStr copy = new_ustr(s.contents);
+
+	list->data[index] = copy;
+
+	list->size++;
+
+	return 1;
 }
 
 /*
@@ -57,6 +107,16 @@ Returns 1 on success, 0 if the index is invalid (out of bounds).
 int8_t listRemoveAt(List* list, int32_t index) {
     // TODO: implement this
 
+	if (index < 0 || index >= list->size){
+		return 0;
+	}
+
+	for (int i = index; i < list->size; i++){
+		list->data[i] = list->data[i+1];
+	}
+
+	list->size--;
+	return 1;
 }
 
 /*
