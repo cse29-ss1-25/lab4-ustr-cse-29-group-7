@@ -20,6 +20,9 @@ UStr new_ustr(char* contents) {
 		all_ascii,
 		contents_copy
 	};
+
+	
+
 	return s;
 }
 
@@ -39,6 +42,52 @@ Returns an empty string on invalid range.
 UStr substring(UStr s, int32_t start, int32_t end) {
 	// TODO: implement this
 
+	if (start >= s.codepoints || end == start || start < 0 || end < 0){
+		UStr empty = new_ustr("");
+		return empty;
+	}
+
+	char* buffer = calloc(sizeof(UStr), len(s) + 1);
+	int buffer_i = 0;
+	int c_point = 0;
+	int i = 0;
+
+	// go to start
+	while (c_point < start){
+		char c = s.contents[i];
+		if ((c & 0b10000000) == 0b00000000){i += 1;}
+                else if ((c & 0b11100000) == 0b11000000){i += 2;}
+                else if ((c & 0b11110000) == 0b11100000){i += 3;}
+                else if ((c & 0b11111000) == 0b11110000){i += 4;}
+                c_point++;
+	}
+
+	// start getting substring to buffer
+        while (c_point < end) {
+                char c = s.contents[i];
+                int len = 0;
+
+                if ((c & 0b10000000) == 0b00000000){len = 1;}
+                else if ((c & 0b11100000) == 0b11000000){len = 2;}
+                else if ((c & 0b11110000) == 0b11100000){len = 3;}
+                else if ((c & 0b11111000) == 0b11110000){len = 4;}
+
+                for (int j = 0; j < len; j++){
+                        buffer[buffer_i] = s.contents[i + j];
+                        buffer_i++;
+                }
+
+                i += len;
+                c_point++;
+        }
+
+	buffer[buffer_i] = 0;
+	UStr new = new_ustr(buffer);
+	
+	free(buffer);
+	// free_ustr(s);
+
+	return new;
 }
 
 /*
