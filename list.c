@@ -144,6 +144,19 @@ int8_t listRemoveAt(List* list, int32_t index) {
 	return 1;
 }
 
+static void check_capacity(List *l) {
+
+	if (l->size == l->capacity) {
+		int32_t new_cap = l->capacity * 2;
+		l->data = realloc(l->data, sizeof(UStr)*new_cap);
+		l->capacity = new_cap;
+	}
+}
+
+static void append(List *parts, UStr s) {
+    check_capacity(parts);
+    parts->data[parts->size++] = s;
+}
 /*
 Splits the given string s into substrings separated by the given delimiter string.
 
@@ -160,9 +173,7 @@ Note that the delimiter could be of a length of more than 1 character
 List split(UStr s, UStr separator) {
 	List parts = new_list(4);
 	if (separator.bytes == 0) {
-		UStr whole = new_ustr(s.contents);
-		parts.data[0] = whole;
-		parts.size = 1;
+		append(&parts, new_ustr(s.contents));
 		return parts;
 	}
 	char* cur = s.contents;
@@ -177,21 +188,10 @@ List split(UStr s, UStr separator) {
 		UStr piece = new_ustr(tmp);
 		free(tmp);
 
-		if (parts.size == parts.capacity) {
-			int32_t new_cap = parts.capacity*2;
-			parts.data = realloc(parts.data, new_cap * sizeof(UStr));
-			parts.capacity = new_cap;
-		}
-		parts.data[parts.size++] = piece;
+		append(&parts, piece);
 		cur = match+sep_len;
 	}
-	UStr last = new_ustr(cur);
-	if (parts.size == parts.capacity) {
-		int32_t new_cap = parts.capacity * 2;
-		parts.data = realloc(parts.data, new_cap*sizeof(UStr));
-		parts.capacity = new_cap;
-	}
-	parts.data[parts.size++] = last;
+	append(&parts, new_ustr(cur));
 	return parts;
 }
 
