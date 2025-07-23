@@ -63,7 +63,7 @@ UStr substring(UStr s, int32_t start, int32_t end) {
 	}
 
 	// start getting substring to buffer
-        while (c_point < end) {
+        while (c_point < end && c_point < s.codepoints) {
                 char c = s.contents[i];
                 int len = 0;
 
@@ -83,7 +83,8 @@ UStr substring(UStr s, int32_t start, int32_t end) {
 
 	buffer[buffer_i] = 0;
 	UStr new = new_ustr(buffer);
-	
+
+	// free what's in buffer 
 	free(buffer);
 	// free_ustr(s);
 
