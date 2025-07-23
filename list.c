@@ -136,6 +136,7 @@ int8_t listRemoveAt(List* list, int32_t index) {
 		return 0;
 	}
 
+	free_ustr(list->data[index]);
 	for (int i = index; i < list->size; i++){
 		list->data[i] = list->data[i+1];
 	}
